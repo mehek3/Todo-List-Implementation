@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Todo List Implementation</title>
+  <style>
+    .todo-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    .todo-item input[type="checkbox"] {
+      margin-right: 10px;
+    }
+    .todo-filters {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 20px;
+    }
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script src="https://unpkg.com/react@17.0.2/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@17.0.2/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.16.6/babel.min.js"></script>
+
+  <script type="text/babel">
+    function TodoItem({ todo, onToggle, onRemove }) {
+      return (
+        <div className="todo-item">
+          <div>
+            <input
+              type="checkbox"
+              checked={todo.completed}
+              onChange={() => onToggle(todo.id)}
+            />
+            <span style={{ textDecoration: todo.completed ? 'line-through' : 'none' }}>
+              {todo.text}
+            </span>
+          </div>
+          <button onClick={() => onRemove(todo.id)}>Remove</button>
+        </div>
+      );
+    }
+
+    function TodoList({ todos, onToggle, onRemove, filterStatus }) {
+      const filteredTodos = todos.filter((todo) => {
+        if (filterStatus === 'all') {
+          return true;
+        }
+        if (filterStatus === 'active') {
+          return !todo.completed;
+        }
+        if (filterStatus === 'completed') {
+          return todo.completed;
+        }
+        return true;
+      });
+
+      return (
+        <div>
+          {filteredTodos.map((todo) => (
+            <TodoItem
+              key={todo.id}
+              todo={todo}
+              onToggle={onToggle}
+              onRemove={onRemove}
+            />
+          ))}
+        </div>
+      );
+    }
+
+    function TodoForm({ onAdd }) {
+      const [value, setValue] = React.useState('');
+
+      const handleSubmit = (event) => {
+        event.preventDefault();
+        if (value.trim()) {
+          onAdd(value);
+          setValue('');
+        }
+      };
+
+      return (
+        <form onSubmit={handleSubmit}>
+          <input
+            type="text"
+            className="todo-input"
+            value={value}
+            onChange={(event) => setValue(event.target.value)}
+            placeholder="Add a new task"
+          />
+        </form>
+      );
+    }
+
+    function TodoApp() {
+      const [todos, setTodos] = React.useState([
+        { id: 1, text: 'Learn React', completed: false },
+        { id: 2, text: 'Build a todo app', completed: true },
+      ]);
+      const [filterStatus, setFilterStatus] = React.useState('all');
+
+      const handleToggle = (id) => {
+        setTodos((prevTodos) =>
+          prevTodos.map((todo) =>
+            todo.id === id ? { ...todo, completed: !todo.completed } : todo
+          )
+        );
+      };
+
+      const handleRemove = (id) => {
+        setTodos((prevTodos) => prevTodos.filter((todo) => todo.id !== id));
+      };
+
+      const handleAdd = (text) => {
+        setTodos((prevTodos) => [
+          ...prevTodos,
+          { id: prevTodos.length + 1, text, completed: false },
+        ]);
+      };
+
+      return (
+        <div>
+          <h1>Todo List</h1>
+          <TodoForm onAdd={handleAdd} />
+          <TodoList
+            todos={todos}
+            onToggle={handleToggle}
+            onRemove={handleRemove}
+            filterStatus={filterStatus}
+          />
+          <div className="todo-filters">
+            <button
+              className={filterStatus === 'all' ? '' : 'hidden'}
+              onClick={() => setFilterStatus('all')}
+            >
+              All
+            </button>
+            <button
+              className={filterStatus === 'active' ? '' : 'hidden'}
+              onClick={() => setFilterStatus('active')}
+            >
+              Active
+            </button>
+            <button
+              className={filterStatus === 'completed' ? '' : 'hidden'}
+              onClick={() => setFilterStatus('completed')}
+            >
+              Completed
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    ReactDOM.render(<TodoApp />, document.getElementById('root'));
+  </script>
+</body>
+</html>
